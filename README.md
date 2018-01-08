@@ -6,7 +6,7 @@ Inspired by [mhinz/neovim-remote](https://github.com/mhinz/neovim-remote).
 
 ## Usage
 
-Now we have only `ex` sub-command, which runs command in ex-mode and prints the output. No need to prefix `:`.
+Now we have only `ex` sub-command, which runs command in ex-mode. No need to prefix `:`.
 
 To show message in command line,
 

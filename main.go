@@ -53,12 +53,11 @@ func (exCommand) Run(args []string) int {
 		return 1
 	}
 
-	res, err := v.CommandOutput(strings.Join(args, " "))
+	err = v.Command(strings.Join(args, " "))
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
-	fmt.Println(res)
 	return 0
 }
 
