@@ -16,7 +16,7 @@ func main() {
 func run() int {
 	addr := os.Getenv("NVIM_LISTEN_ADDRESS")
 	if addr == "" {
-		fmt.Fprintln(os.Stderr, "NVIM_LISTEN_ADDRESS not set")
+		fmt.Fprintln(os.Stderr, "NVIM_LISTEN_ADDRESS is not set")
 		return 1
 	}
 
@@ -49,11 +49,22 @@ type exCommand struct {
 }
 
 func (exCommand) Synopsis() string {
-	return ""
+	return "execute command"
 }
 
 func (exCommand) Help() string {
-	return ""
+	return `Execute arguments as NeoVim command. No need to prefix ':'.
+
+EXAMPLES:
+
+	$ nvc ex echo \'abc\'
+
+	It executes ":echo 'abc'" in NeoVim so that NeoVim shows "abc" in status line.
+
+	$ nvc ex e a.txt
+
+	It executes ":e a.txt" in NeoVim so that NeoVim opens "a.txt" in current buffer.
+`
 }
 
 func (c exCommand) Run(args []string) int {
