@@ -10,21 +10,43 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
+	addr := os.Getenv("NVIM_LISTEN_ADDRESS")
+	if addr == "" {
+		fmt.Fprintln(os.Stderr, "NVIM_LISTEN_ADDRESS not set")
+		return 1
+	}
+
+	nv, err := nvim.Dial(addr)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	defer nv.Close()
+
 	c := cli.NewCLI("nvc", "0.0.1")
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
-		"ex": exCommandFactory,
+		"ex": func() (cli.Command, error) {
+			return exCommand{
+				nv: nv,
+			}, nil
+		},
 	}
 
 	es, err := c.Run()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 	}
-
-	os.Exit(es)
+	return es
 }
 
-type exCommand struct {}
+type exCommand struct {
+	nv *nvim.Nvim
+}
 
 func (exCommand) Synopsis() string {
 	return ""
@@ -34,33 +56,16 @@ func (exCommand) Help() string {
 	return ""
 }
 
-func (exCommand) Run(args []string) int {
-	addr := os.Getenv("NVIM_LISTEN_ADDRESS")
-	if addr == "" {
-		fmt.Println("NVIM_LISTEN_ADDRESS not set")
-		return 1
-	}
-
-	v, err := nvim.Dial(addr)
-	if err != nil {
-		fmt.Println(err)
-		return 1
-	}
-	defer v.Close()
-
+func (c exCommand) Run(args []string) int {
 	if len(args) < 2 {
-		fmt.Println("missing command to execute as argument")
+		fmt.Fprintln(os.Stderr, "missing command to execute as argument")
 		return 1
 	}
 
-	err = v.Command(strings.Join(args, " "))
+	err := c.nv.Command(strings.Join(args, " "))
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
 	return 0
-}
-
-func exCommandFactory() (cli.Command, error) {
-	return exCommand{}, nil
 }
