@@ -1,12 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/neovim/go-client/nvim"
 	"github.com/mitchellh/cli"
+	"github.com/neovim/go-client/nvim"
 )
 
 func main() {
@@ -32,6 +33,11 @@ func run() int {
 	c.Commands = map[string]cli.CommandFactory{
 		"ex": func() (cli.Command, error) {
 			return exCommand{
+				nv: nv,
+			}, nil
+		},
+		"openwin": func() (cli.Command, error) {
+			return openWinCommand{
 				nv: nv,
 			}, nil
 		},
@@ -79,4 +85,116 @@ func (c exCommand) Run(args []string) int {
 		return 1
 	}
 	return 0
+}
+
+type openWinCommand struct {
+	nv *nvim.Nvim
+}
+
+func (openWinCommand) Synopsis() string { return "open window" }
+
+func (openWinCommand) Help() string {
+	return `Open Window. See https://neovim.io/doc/user/api.html#nvim_open_win() for detail.
+The width and height should be specified as WxH.
+
+EXAMPLES:
+
+	$ nvc openwin 30x5
+`
+}
+
+func (c openWinCommand) Run(args []string) int {
+	fs := flag.NewFlagSet("open-window", flag.ExitOnError)
+	var bufN, winN int
+	var enter, focusable, external bool
+	var relative, anchor string
+	var row, col float64
+	fs.IntVar(&bufN, "buffer", 0, "")
+	fs.BoolVar(&enter, "enter", true, "")
+	fs.StringVar(&relative, "relative", "", "")
+	fs.IntVar(&winN, "win", 0, "")
+	fs.StringVar(&anchor, "anchor", "", "")
+	fs.Float64Var(&row, "row", 0, "")
+	fs.Float64Var(&col, "col", 0, "")
+	fs.BoolVar(&focusable, "focusable", false, "")
+	fs.BoolVar(&external, "external", false, "")
+	var pargs []string
+	for {
+		if err := fs.Parse(args); err != nil {
+			fmt.Fprintf(os.Stderr, "Invalid argument: %v\n", err)
+			return 1
+		}
+		if fs.NArg() == 0 {
+			break
+		}
+		pargs = append(pargs, args[0])
+		args = args[1:]
+	}
+
+	var buf nvim.Buffer
+	if isSet(fs, "buffer") {
+		var err error
+		buf, err = c.nv.CurrentBuffer()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Could not get the current buffer: %v\n", err)
+		}
+	} else {
+		buf = nvim.Buffer(bufN)
+	}
+
+	if len(pargs) < 1 {
+		fmt.Fprintln(os.Stderr, "Please specify the width and height as WxH")
+		return 1
+	}
+	if len(pargs) > 1 {
+		fmt.Fprintln(os.Stderr, "Too many positional arguments")
+		return 1
+	}
+	var width, height int
+	if _, err := fmt.Sscanf(pargs[0], "%dx%d", &width, &height); err != nil {
+		fmt.Fprintf(os.Stderr, "Could not parse the width and height: %v\n", err)
+		return 1
+	}
+
+	config := make(map[string]interface{})
+	config["width"] = width
+	config["height"] = height
+	if isSet(fs, "relative") {
+		config["relative"] = relative
+	}
+	if isSet(fs, "win") {
+		config["win"] = winN
+	}
+	if isSet(fs, "anchor") {
+		config["anchor"] = anchor
+	}
+	if isSet(fs, "row") {
+		config["row"] = row
+	}
+	if isSet(fs, "col") {
+		config["col"] = col
+	}
+	if isSet(fs, "focusable") {
+		config["focusable"] = focusable
+	}
+	if isSet(fs, "external") {
+		config["external"] = external
+	}
+	w, err := c.nv.OpenWindow(buf, enter, config)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	fmt.Printf("Window %d is successfully opened.\n", w)
+	return 0
+}
+
+func isSet(fs *flag.FlagSet, name string) bool {
+	var set bool
+	fs.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			set = true
+		}
+	})
+	return set
 }

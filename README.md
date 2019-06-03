@@ -6,7 +6,20 @@ Inspired by [mhinz/neovim-remote](https://github.com/mhinz/neovim-remote).
 
 ## Usage
 
-Now we have only `ex` sub-command, which runs command in ex-mode. No need to prefix `:`.
+```
+Usage: nvc [--version] [--help] <command> [<args>]
+
+Available commands are:
+    ex         execute command
+    openwin    open window
+
+```
+
+The `NVIM_LISTEN_ADDRESS` environment variable must be set. In terminal mode of NeoVim, it should set normally.
+
+## Example
+
+For example, `ex` sub-command runs a command in ex-mode. No need to prefix `:`.
 
 To show message in command line,
 
@@ -21,8 +34,6 @@ $ nvc ex e a.txt
 ```
 
 (Note that you must pass relative path from NeoVim's current directory or absolute path)
-
-The `NVIM_LISTEN_ADDRESS` environment variable must be set. In terminal mode of NeoVim, it should set normally.
 
 ## Installation
 
