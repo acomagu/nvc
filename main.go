@@ -99,7 +99,7 @@ The width and height should be specified as WxH.
 
 EXAMPLES:
 
-	$ nvc openwin 30x5
+	$ nvc openwin 30x5 --relative cursor --row 3 --col 3
 `
 }
 
@@ -108,14 +108,14 @@ func (c openWinCommand) Run(args []string) int {
 	var bufN, winN int
 	var enter, focusable, external bool
 	var relative, anchor string
-	var row, col float64
+	var row, col int
 	fs.IntVar(&bufN, "buffer", 0, "")
 	fs.BoolVar(&enter, "enter", true, "")
 	fs.StringVar(&relative, "relative", "", "")
 	fs.IntVar(&winN, "win", 0, "")
 	fs.StringVar(&anchor, "anchor", "", "")
-	fs.Float64Var(&row, "row", 0, "")
-	fs.Float64Var(&col, "col", 0, "")
+	fs.IntVar(&row, "row", 0, "")
+	fs.IntVar(&col, "col", 0, "")
 	fs.BoolVar(&focusable, "focusable", false, "")
 	fs.BoolVar(&external, "external", false, "")
 	var pargs []string
@@ -156,29 +156,29 @@ func (c openWinCommand) Run(args []string) int {
 		return 1
 	}
 
-	config := make(map[string]interface{})
-	config["width"] = width
-	config["height"] = height
+	config := new(nvim.WindowConfig)
+	config.Width = width
+	config.Height = height
 	if isSet(fs, "relative") {
-		config["relative"] = relative
+		config.Relative = relative
 	}
 	if isSet(fs, "win") {
-		config["win"] = winN
+		config.Win = nvim.Window(winN)
 	}
 	if isSet(fs, "anchor") {
-		config["anchor"] = anchor
+		config.Anchor = anchor
 	}
 	if isSet(fs, "row") {
-		config["row"] = row
+		config.Row = row
 	}
 	if isSet(fs, "col") {
-		config["col"] = col
+		config.Col = col
 	}
 	if isSet(fs, "focusable") {
-		config["focusable"] = focusable
+		config.Focusable = focusable
 	}
 	if isSet(fs, "external") {
-		config["external"] = external
+		config.External = external
 	}
 	w, err := c.nv.OpenWindow(buf, enter, config)
 	if err != nil {
