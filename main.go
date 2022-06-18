@@ -15,9 +15,12 @@ func main() {
 }
 
 func run() int {
-	addr := os.Getenv("NVIM_LISTEN_ADDRESS")
+	addr := os.Getenv("NVIM")
 	if addr == "" {
-		fmt.Fprintln(os.Stderr, "NVIM_LISTEN_ADDRESS is not set")
+		addr = os.Getenv("NVIM_LISTEN_ADDRESS")
+	}
+	if addr == "" {
+		fmt.Fprintln(os.Stderr, "NVIM or NVIM_LISTEN_ADDRESS environment variable must be set")
 		return 1
 	}
 
