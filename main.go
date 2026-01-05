@@ -82,7 +82,8 @@ func (c exCommand) Run(args []string) int {
 		return 1
 	}
 
-	err := c.nv.Command(strings.Join(args, " "))
+	out, err := c.nv.Exec(strings.Join(args, " "), true)
+	fmt.Print(out)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
